@@ -1,0 +1,14 @@
+{
+  "0 debug pnpm:scope": {
+    "selected": 1
+  },
+  "1 error pnpm": {
+    "code": "ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND",
+    "err": {
+      "name": "pnpm",
+      "message": "No package.json (or package.yaml, or package.json5) was found in \"/home/marcus/Projects/aws-live\".",
+      "code": "ERR_PNPM_NO_IMPORTER_MANIFEST_FOUND",
+      "stack": "pnpm: No package.json (or package.yaml, or package.json5) was found in \"/home/marcus/Projects/aws-live\".\n    at readProjectManifest (/home/marcus/.local/share/nvm/v16.9.1/pnpm-global/5/node_modules/.pnpm/pnpm@6.22.2/node_modules/pnpm/dist/pnpm.cjs:43046:13)\n    at async readProjectManifest (/home/marcus/.local/share/nvm/v16.9.1/pnpm-global/5/node_modules/.pnpm/pnpm@6.22.2/node_modules/pnpm/dist/pnpm.cjs:43263:60)\n    at async Object.handler (/home/marcus/.local/share/nvm/v16.9.1/pnpm-global/5/node_modules/.pnpm/pnpm@6.22.2/node_modules/pnpm/dist/pnpm.cjs:118404:67)\n    at async /home/marcus/.local/share/nvm/v16.9.1/pnpm-global/5/node_modules/.pnpm/pnpm@6.22.2/node_modules/pnpm/dist/pnpm.cjs:134121:20\n    at async run (/home/marcus/.local/share/nvm/v16.9.1/pnpm-global/5/node_modules/.pnpm/pnpm@6.22.2/node_modules/pnpm/dist/pnpm.cjs:134095:34)\n    at async runPnpm (/home/marcus/.local/share/nvm/v16.9.1/pnpm-global/5/node_modules/.pnpm/pnpm@6.22.2/node_modules/pnpm/dist/pnpm.cjs:134307:5)\n    at async /home/marcus/.local/share/nvm/v16.9.1/pnpm-global/5/node_modules/.pnpm/pnpm@6.22.2/node_modules/pnpm/dist/pnpm.cjs:134299:7"
+    }
+  }
+}
