@@ -4,9 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+pymysql = "*"
+boto3 = "*"
+flask = "*"
+flask-expects-json = "*"
+argon2-cffi = "*"
+faker = "*"
+flask-cors = "*"
 
 [dev-packages]
 autopep8 = "*"
+python-dotenv = "*"
 
 [requires]
 python_version = "3.9"
