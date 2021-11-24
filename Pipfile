@@ -4,12 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-flask = "*"
 pymysql = "*"
-flask-expects-json = "*"
 boto3 = "*"
+flask = "*"
+flask-expects-json = "*"
 argon2-cffi = "*"
 faker = "*"
+flask-cors = "*"
 
 [dev-packages]
 autopep8 = "*"
