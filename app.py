@@ -1,4 +1,5 @@
 from flask import Flask, send_from_directory, request
+from flask_cors import CORS
 from flask_expects_json import expects_json
 from pymysql import cursors
 from os import PathLike, path
@@ -13,6 +14,7 @@ bundleExist = path.isfile('./web/dist/index.html')
 
 # setup flask
 app = Flask(__name__)
+cors = CORS(app)
 
 # register blueprints
 app.register_blueprint(error_blueprint)

@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { NButton, useLoadingBar } from 'naive-ui'
+import { NButton } from 'naive-ui'
 import { useUserStore } from '~/stores/user'
-
-const loadingBar = useLoadingBar()
 
 const user = useUserStore()
 const name = ref(user.savedName)
@@ -58,7 +56,7 @@ const { t } = useI18n()
       >
         {{ t('button.go') }}
       </button> -->
-      <n-button class="m-3 text-sm" @click="loadingBar.start()">
+      <n-button class="m-3 text-sm">
         {{ t('button.go') }}
       </n-button>
     </div>
