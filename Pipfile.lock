@@ -1,7 +1,11 @@
 {
     "_meta": {
         "hash": {
+<<<<<<< Updated upstream
             "sha256": "56a9afd5d73834d5c9c15358005f5590cfff9f3ea25bf3c81216e6cf3cd0d091"
+=======
+            "sha256": "6f2360e6f87302c0c7d967744ba7805b5af87b2bc6980a77d91ec14168170ae7"
+>>>>>>> Stashed changes
         },
         "pipfile-spec": 6,
         "requires": {
@@ -120,6 +124,17 @@
             "markers": "python_version >= '3.6'",
             "version": "==8.0.3"
         },
+<<<<<<< Updated upstream
+=======
+        "colorama": {
+            "hashes": [
+                "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b",
+                "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"
+            ],
+            "markers": "platform_system == 'Windows'",
+            "version": "==0.4.4"
+        },
+>>>>>>> Stashed changes
         "faker": {
             "hashes": [
                 "sha256:3c997b505627e63eb54e7ec268d0669bc5b6b98c1822f632d2784d91664d5f11",
@@ -136,6 +151,7 @@
             "index": "pypi",
             "version": "==2.0.2"
         },
+<<<<<<< Updated upstream
         "flask-cors": {
             "hashes": [
                 "sha256:74efc975af1194fc7891ff5cd85b0f7478be4f7f59fe158102e91abb72bb4438",
@@ -144,6 +160,8 @@
             "index": "pypi",
             "version": "==3.0.10"
         },
+=======
+>>>>>>> Stashed changes
         "flask-expects-json": {
             "hashes": [
                 "sha256:4ef186a86f10572a21af82e549546deda024326628b4a96cd14d3a0f71754d62"

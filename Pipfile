@@ -4,6 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+<<<<<<< Updated upstream
 pymysql = "*"
 boto3 = "*"
 flask = "*"
@@ -11,6 +12,14 @@ flask-expects-json = "*"
 argon2-cffi = "*"
 faker = "*"
 flask-cors = "*"
+=======
+flask = "*"
+flask-expects-json = "*"
+pymysql = "*"
+boto3 = "*"
+argon2-cffi = "*"
+faker = "*"
+>>>>>>> Stashed changes
 
 [dev-packages]
 autopep8 = "*"
