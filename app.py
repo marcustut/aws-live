@@ -1,33 +1,62 @@
-from flask import Flask, render_template, request
-from pymysql import connections
-import os
+from flask import Flask, send_from_directory, request
+from flask_expects_json import expects_json
+from pymysql import cursors
+from os import PathLike, path
 import boto3
+import pymysql
 from config import Config
+from error import blueprint as error_blueprint
+from handler import handle_create_one_employee, handle_delete_one_employee, handle_fetch_many_employee, handle_fetch_one_employee, handle_update_one_employee
+from schema import create_employee_schema, update_employee_schema
 
+bundleExist = path.isfile('./web/dist/index.html')
+
+# setup flask
 app = Flask(__name__)
 
+# register blueprints
+app.register_blueprint(error_blueprint)
+
+# initialize the config (setup environment var)
 config = Config()
 
-db_conn = connections.Connection(
+# connect to rds (mysql)
+db_conn = pymysql.connect(
     host=config.database_host,
     port=3306,
     user=config.database_user,
     password=config.database_password,
-    db=config.database_db
+    db=config.database_db,
+    charset='utf8mb4',
+    cursorclass=cursors.DictCursor
 )
-output = {}
-table = 'employee'
 
 
-@app.route("/", methods=['GET', 'POST'])
-def home():
-    return render_template('AddEmp.html')
+@app.route("/<path:path>", methods=['GET'])
+def send_static_files(path: PathLike):
+    return send_from_directory('web/dist', path) if bundleExist else 'No html files'
 
 
-@app.route("/about", methods=['POST'])
-def about():
-    return render_template('www.intellipaat.com')
+@app.route("/employee/<string:username>", methods=['GET', 'PUT', 'DELETE'])
+@expects_json(update_employee_schema, ignore_for=['GET', 'DELETE'])
+def employee(username: str):
+    if request.method == "GET":
+        return handle_fetch_one_employee(db_conn, username)
+    elif request.method == "DELETE":
+        return handle_delete_one_employee(db_conn, username)
+    else:
+        return handle_update_one_employee(db_conn, username, request.json)
 
+
+@app.route("/employee", methods=['POST'])
+@expects_json(create_employee_schema)
+def create_employee():
+    return handle_create_one_employee(db_conn, request.json)
+
+
+@app.route("/employees", methods=['GET'])
+def employees():
+    return handle_fetch_many_employee(db_conn, request.args)
 
 # @app.route("/addemp", methods=['POST'])
 # def AddEmp():
@@ -80,4 +109,7 @@ def about():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # TODO: Check whether web/dist folder exists
+
+    debug = False if config.app_env == "production" else True
+    app.run(host='0.0.0.0', port=5000, debug=debug)

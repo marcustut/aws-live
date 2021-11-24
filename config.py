@@ -22,6 +22,7 @@ class Config:
     def __init__(self) -> None:
         # load environment variables from .env
         load_dotenv()
+        self.app_env = _get_env('APP_ENV')
         self.database_url = _get_env('DATABASE_URL')
         self.database_host = _get_env('DATABASE_HOST')
         self.database_user = _get_env('DATABASE_USER')

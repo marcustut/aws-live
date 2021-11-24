@@ -7,6 +7,10 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
+# Connect to db through mycli
+mycli:
+	mycli $(DATABASE_URL)
+
 # Create a new migration
 migrate-new:
 	dbmate -u $(DATABASE_URL) -d $(DB_MIGRATIONS_DIR) -s $(DB_SCHEMA_FILE) new $(NAME)

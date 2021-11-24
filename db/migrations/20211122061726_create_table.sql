@@ -26,7 +26,10 @@ CREATE TABLE address (
 );
 CREATE TABLE department (
     department_id BIGINT NOT NULL AUTO_INCREMENT,
-    department_name VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (department_id)
 );
 CREATE TABLE employee (
@@ -41,9 +44,11 @@ CREATE TABLE employee (
     address_id BIGINT,
     department_id BIGINT,
     PRIMARY KEY (employee_id),
-    FOREIGN KEY (user_id) REFERENCES user(user_id),
-    FOREIGN KEY (address_id) REFERENCES address(address_id),
-    FOREIGN KEY (department_id) REFERENCES department(department_id)
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (address_id) REFERENCES address(address_id) ON DELETE
+    SET NULL,
+        FOREIGN KEY (department_id) REFERENCES department(department_id) ON DELETE
+    SET NULL
 );
 -- migrate:down
 DROP TABLE employee;

@@ -6,6 +6,7 @@ const loadingBar = useLoadingBar()
 
 const user = useUserStore()
 const name = ref(user.savedName)
+const { data } = useFetch('http://localhost:5000/employee/amy12')
 
 const router = useRouter()
 const go = () => {
@@ -61,5 +62,7 @@ const { t } = useI18n()
         {{ t('button.go') }}
       </n-button>
     </div>
+
+    <pre>{{ JSON.stringify(data, null, 2) }}</pre>
   </div>
 </template>
