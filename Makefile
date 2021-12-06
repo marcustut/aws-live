@@ -26,3 +26,9 @@ migrate-down:
 # Check migration status
 migrate-status:
 	dbmate -u $(DATABASE_URL) -d $(DB_MIGRATIONS_DIR) -s $(DB_SCHEMA_FILE) status
+
+dev:
+	python app.py
+
+prod:
+	APP_ENV=production python app.py
