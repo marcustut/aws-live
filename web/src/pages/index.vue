@@ -6,7 +6,7 @@ import { Add, Edit, Delete } from '@vicons/carbon'
 import type { EmployeeView } from '~/types'
 
 const dataOpts = ref<{ cursor?: number; limit: number }>({ limit: 1000 })
-const { data } = useFetch<EmployeeView[]>(`http://localhost:5000/employees?limit=${dataOpts.value.limit}`).get().json<EmployeeView[]>()
+const { data } = useFetch<EmployeeView[]>(`${import.meta.env.VITE_SERVER_URL}/employees?limit=${dataOpts.value.limit}`).get().json<EmployeeView[]>()
 const checkedRowKeys = ref([])
 const dateFormat = ref('dd/MM/yyyy')
 
