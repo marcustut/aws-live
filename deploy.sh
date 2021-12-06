@@ -43,7 +43,8 @@ yes Y | pipenv shell
 pipenv install && pipenv install --dev
 
 # copy .env from bucket
-aws s3 cp s3://marcuslee-aws-live-env/.env .env
+aws s3 cp s3://marcuslee-aws-live-env/server.env .env
+aws s3 cp s3://marcuslee-aws-live-env/client.env.local web/.env.local
 
 # install web dependencies
 cd web && pnpm i && pnpm build
