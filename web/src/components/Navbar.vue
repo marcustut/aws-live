@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NA, NButton } from 'naive-ui'
-import { Dashboard, Help } from '@vicons/carbon'
+import { Dashboard } from '@vicons/carbon'
 import { isDark, toggleDark } from '~/composables'
 
 const help = () => {
