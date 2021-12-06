@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory, request
+from flask import Flask, send_from_directory, send_file, request
 from flask_cors import CORS
 from flask_expects_json import expects_json
 from pymysql import cursors
@@ -32,6 +32,10 @@ db_conn = pymysql.connect(
     charset='utf8mb4',
     cursorclass=cursors.DictCursor
 )
+
+@app.route("/", methods=['GET'])
+def index_page():
+    return send_file('web/dist/index.html')
 
 
 @app.route("/<path:path>", methods=['GET'])
