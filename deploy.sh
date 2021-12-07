@@ -31,10 +31,10 @@ nvm install node
 npm install -g pnpm
 
 # clone repo
-git clone https://github.com/marcustut/aws-live.git
+# git clone https://github.com/marcustut/aws-live.git
 
 # cd into repo
-cd aws-live
+# cd aws-live
 
 # install virtual env (pipenv)
 yes Y | pipenv shell

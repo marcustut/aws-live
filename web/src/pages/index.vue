@@ -1,16 +1,52 @@
 <script setup lang="ts">
-import { NAvatar, NDataTable, NDescriptions, NDescriptionsItem, NP, NText, NSpace, NTag, NButton, NIcon } from 'naive-ui'
+import {
+  NAvatar,
+  NDataTable,
+  NDrawer,
+  NDrawerContent,
+  NDescriptions,
+  NDescriptionsItem,
+  NP,
+  NTag,
+  NText,
+  NSpace,
+  NButton,
+  NSelect,
+  NInput,
+  NInputNumber,
+  NGrid,
+  NIcon,
+  NForm,
+  NFormItemGi,
+  NDatePicker,
+  useLoadingBar,
+  useNotification
+} from 'naive-ui'
 import type { DataTableColumn } from 'naive-ui'
 import { format, compareAsc } from 'date-fns'
 import { Add, Edit, Delete } from '@vicons/carbon'
 import type { EmployeeView } from '~/types'
 
-const dataOpts = ref<{ cursor?: number; limit: number }>({ limit: 1000 })
-const { data } = useFetch<EmployeeView[]>(`${import.meta.env.VITE_SERVER_URL}/employees?limit=${dataOpts.value.limit}`).get().json<EmployeeView[]>()
-const checkedRowKeys = ref([])
-const dateFormat = ref('dd/MM/yyyy')
+const loadingBar = useLoadingBar()
+const notification = useNotification()
 
-const sortedData = computed(() => data.value ? data.value.sort((a, b) => a.employee_id - b.employee_id) : undefined)
+const dataOpts = ref<{ cursor?: number; limit: number }>({ limit: 1000 })
+const checkedRowKeys = ref<number[]>([])
+const dateFormat = ref<string>('dd/MM/yyyy')
+const editing = ref<{ employee: EmployeeView | null, isEditing: boolean }>({ employee: null, isEditing: false })
+const editingFormRef = ref(null)
+
+loadingBar.start()
+const { data, onFetchError, onFetchResponse } = useFetch<EmployeeView[]>(`${import.meta.env.VITE_SERVER_URL}/employees?limit=${dataOpts.value.limit}`).get().json<EmployeeView[]>()
+
+onFetchError(() => {
+  loadingBar.error()
+  notification.error({ title: `An error occured`, meta: `Unable to fetch employees from server` })
+})
+onFetchResponse(() => loadingBar.finish())
+
+const sortedData = computed(() => data.value ? data.value.sort((a, b) => a.employee_id - b.employee_id) : [])
+const checkedData = computed(() => sortedData.value.length > 0 ? sortedData.value.filter((d) => checkedRowKeys.value.includes(d.employee_id)) : [])
 
 const pagination = {
   pageSize: 10,
@@ -20,17 +56,83 @@ const addEmployee = () => {
   alert('Not implemented')
 }
 
-const editEmployee = () => {
+const editEmployee = (employee: EmployeeView) => {
   alert('Not implemented')
 }
 
-const deleteEmployee = () => {
-  alert('Not implemented')
+const deleteEmployee = (username: string) => {
+  loadingBar.start()
+  const { onFetchError, onFetchResponse } = useFetch<EmployeeView>(`${import.meta.env.VITE_SERVER_URL}/employee/${username}`).delete().json<EmployeeView>()
+  onFetchError(() => {
+    loadingBar.error()
+    notification.error({ title: `An error occured`, meta: `Unable to delete employee - ${username}` })
+  })
+  onFetchResponse(() => {
+    loadingBar.finish()
+    notification.success({ title: `Successfully deleted`, meta: `Employee - ${username} had been deleted` })
+  })
 }
 
 const bulkDeleteEmployee = () => {
-  alert('Not implemented')
+  if (checkedData.value.length !== 0)
+    checkedData.value.forEach((d) => deleteEmployee(d.user.username))
+  else
+    notification.error({ title: 'No rows are selected', meta: 'Select at least one row to bulk delete' })
 }
+
+const genderOptions = ['Male', 'Female'].map((g) => ({ label: g, value: g.toLowerCase() }))
+const roleOptions = ['Admin', 'Manager', 'Runner', 'Cashier'].map((g) => ({ label: g, value: g.toLowerCase() }))
+
+const editingFormModel = ref({
+  userValue: {
+    first_name: '',
+    last_name: '',
+    username: '',
+    email: '',
+    dob: null as number | null,
+    gender: '',
+    phone_number: '',
+    avatar_url: '',
+  },
+
+  departmentValue: {
+    name: '',
+  },
+
+  addressValue: {
+    city: '',
+    country: '',
+    line1: '',
+    line2: '',
+    postal_code: '',
+    state: '',
+  },
+
+  salaryValue: null as number | null,
+  roleValue: '',
+  startAtValue: null as number | null,
+  endAtValue: null as number | null,
+})
+
+watch(editing, () => {
+  if (editing.value.employee) {
+    const { user, address, department, ...employee } = editing.value.employee
+    editingFormModel.value = {
+      ...editingFormModel.value,
+      userValue: {
+        ...user,
+        dob: new Date(user.dob).getTime(),
+        avatar_url: user.avatar_url ?? '',
+      },
+      addressValue: address,
+      departmentValue: { name: department.name },
+      salaryValue: parseFloat(employee.salary),
+      roleValue: employee.role,
+      startAtValue: new Date(employee.start_at).getTime(),
+      endAtValue: employee.end_at ? new Date(employee.end_at).getTime() : null,
+    }
+  }
+})
 
 const columns: DataTableColumn<EmployeeView>[] = [
   {
@@ -191,7 +293,7 @@ const columns: DataTableColumn<EmployeeView>[] = [
   {
     title: 'Actions',
     key: 'actions',
-    render: () => {
+    render: (row) => {
       return h(
         NSpace,
         {},
@@ -199,7 +301,7 @@ const columns: DataTableColumn<EmployeeView>[] = [
           default: () => [
             h(
               NButton,
-              { tertiary: true, circle: true, type: 'info', onClick: editEmployee },
+              { tertiary: true, circle: true, type: 'info', onClick: () => editing.value = { employee: row, isEditing: true } },
               {
                 icon: () => h(
                   NIcon,
@@ -210,7 +312,7 @@ const columns: DataTableColumn<EmployeeView>[] = [
             ),
             h(
               NButton,
-              { tertiary: true, circle: true, type: 'error', onClick: deleteEmployee },
+              { tertiary: true, circle: true, type: 'error', onClick: () => deleteEmployee(row.user.username) },
               {
                 icon: () => h(
                   NIcon,
@@ -261,4 +363,84 @@ const columns: DataTableColumn<EmployeeView>[] = [
       :pagination="pagination"
     />
   </n-space>
+  <n-drawer v-model:show="editing.isEditing" :width="450">
+    <n-drawer-content
+      :title="editing.employee ? `${editing.employee.user.first_name} ${editing.employee.user.last_name}` : ''"
+    >
+      <n-form ref="editingFormRef" size="small" :model="editingFormModel">
+        <n-grid :span="24" :x-gap="4">
+          <n-form-item-gi
+            :span="12"
+            label="First Name"
+            path="editingFormModel.userValue.first_name"
+          >
+            <n-input
+              placeholder="First Name"
+              v-model:value="editingFormModel.userValue.first_name"
+            />
+          </n-form-item-gi>
+          <n-form-item-gi :span="12" label="Last Name" path="editingFormModel.userValue.last_name">
+            <n-input placeholder="Last Name" v-model:value="editingFormModel.userValue.last_name" />
+          </n-form-item-gi>
+          <n-form-item-gi :span="12" label="Username" path="editingFormModel.userValue.username">
+            <n-input
+              disabled
+              placeholder="Username"
+              v-model:value="editingFormModel.userValue.username"
+            />
+          </n-form-item-gi>
+          <n-form-item-gi :span="12" label="Email" path="editingFormModel.userValue.email">
+            <n-input placeholder="Email" v-model:value="editingFormModel.userValue.email" />
+          </n-form-item-gi>
+          <n-form-item-gi
+            :span="12"
+            label="Phone Number"
+            path="editingFormModel.userValue.phone_number"
+          >
+            <n-input
+              placeholder="Phone Number"
+              v-model:value="editingFormModel.userValue.phone_number"
+            />
+          </n-form-item-gi>
+          <n-form-item-gi :span="12" label="Date of Birth" path="editingFormModel.userValue.dob">
+            <n-date-picker type="date" v-model:value="editingFormModel.userValue.dob" />
+          </n-form-item-gi>
+          <n-form-item-gi :span="24" label="Gender" path="editingFormModel.userValue.gender">
+            <n-select
+              placeholder="Gender"
+              :options="genderOptions"
+              v-model:value="editingFormModel.userValue.gender"
+            />
+          </n-form-item-gi>
+          <n-form-item-gi :span="12" label="Start At" path="editingFormModel.startAtValue">
+            <n-date-picker type="date" v-model:value="editingFormModel.startAtValue" />
+          </n-form-item-gi>
+          <n-form-item-gi :span="12" label="End At" path="editingFormModel.endAtValue">
+            <n-date-picker type="date" v-model:value="editingFormModel.endAtValue" />
+          </n-form-item-gi>
+          <n-form-item-gi :span="12" label="Role" path="editingFormModel.roleValue">
+            <n-select
+              placeholder="Role"
+              :options="roleOptions"
+              v-model:value="editingFormModel.roleValue"
+            />
+          </n-form-item-gi>
+          <n-form-item-gi :span="12" label="Salary" path="editingFormModel.salaryValue">
+            <n-input-number v-model:value="editingFormModel.salaryValue">
+              <template #prefix>RM</template>
+            </n-input-number>
+          </n-form-item-gi>
+        </n-grid>
+      </n-form>
+      <template #footer>
+        <n-button
+          ghost
+          type="error"
+          class="mr-2"
+          @click="() => editing = { employee: null, isEditing: false }"
+        >Cancel</n-button>
+        <n-button type="success">Apply</n-button>
+      </template>
+    </n-drawer-content>
+  </n-drawer>
 </template>
