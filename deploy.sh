@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# install git
-sudo yum update && sudo yum install git -y
-
 # install dev tools for build
 sudo yum groupinstall "Development Tools" -y
 sudo yum install openssl-devel -y

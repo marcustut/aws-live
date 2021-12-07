@@ -4,6 +4,7 @@
 
 declare module 'vue' {
   export interface GlobalComponents {
+    AddEmployeeDrawer: typeof import('./components/AddEmployeeDrawer.vue')['default']
     CarbonCampsite: typeof import('~icons/carbon/campsite')['default']
     CarbonDashboard: typeof import('~icons/carbon/dashboard')['default']
     CarbonDicomOverlay: typeof import('~icons/carbon/dicom-overlay')['default']
