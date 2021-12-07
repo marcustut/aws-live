@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# install git
-sudo yum update && sudo yum install git -y
-
 # install dev tools for build
 sudo yum groupinstall "Development Tools" -y
 sudo yum install openssl-devel -y
@@ -29,12 +26,6 @@ nvm install node
 
 # install pnpm
 npm install -g pnpm
-
-# clone repo
-git clone https://github.com/marcustut/aws-live.git
-
-# cd into repo
-cd aws-live
 
 # install virtual env (pipenv)
 yes Y | pipenv shell
