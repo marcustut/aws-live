@@ -1,6 +1,8 @@
 <script setup lang="ts">
+// @ts-ignore
 import {
   NAvatar,
+  NUpload,
   NDataTable,
   NDrawer,
   NDrawerContent,
@@ -27,6 +29,10 @@ import type { DataTableColumn } from 'naive-ui'
 import { format, compareAsc } from 'date-fns'
 import { Add, Edit, Delete } from '@vicons/carbon'
 import type { EmployeeView } from '~/types'
+import { useEmployeeFormModel } from '~/composables'
+import EmployeeDrawer from '~/components/EmployeeDrawer.vue'
+import { useDrawerStore } from '~/stores/drawer'
+import { useFormStore } from '~/stores/form'
 
 const loadingBar = useLoadingBar()
 const notification = useNotification()
@@ -34,17 +40,17 @@ const notification = useNotification()
 const dataOpts = ref<{ cursor?: number; limit: number }>({ limit: 1000 })
 const checkedRowKeys = ref<number[]>([])
 const dateFormat = ref<string>('dd/MM/yyyy')
-const editing = ref<{ employee: EmployeeView | null; isEditing: boolean }>({ employee: null, isEditing: false })
-const editingFormRef = ref(null)
-const addFormOpen = ref<boolean>(false)
-const addFormRef = ref(null)
+const editing = ref<{ employee: EmployeeView | null }>({ employee: null })
+
+const drawer = useDrawerStore()
+const form = useFormStore()
 
 loadingBar.start()
-const { data, onFetchError, onFetchResponse } = useFetch<EmployeeView[]>(`${import.meta.env.VITE_SERVER_URL}/employees?limit=${dataOpts.value.limit}`).get().json<EmployeeView[]>()
+const { data, onFetchError, onFetchResponse, execute } = useFetch<EmployeeView[]>(`${import.meta.env.VITE_SERVER_URL}/employees?limit=${dataOpts.value.limit}`).get().json<EmployeeView[]>()
 
 onFetchError(() => {
   loadingBar.error()
-  notification.error({ title: 'An error occured', meta: 'Unable to fetch employees from server' })
+  notification.error({ title: 'An error occurred', meta: 'Unable to fetch employees from server' })
 })
 onFetchResponse(() => loadingBar.finish())
 
@@ -52,18 +58,38 @@ const sortedData = computed(() => data.value ? data.value.sort((a, b) => a.emplo
 const checkedData = computed(() => sortedData.value.length > 0 ? sortedData.value.filter(d => checkedRowKeys.value.includes(d.employee_id)) : [])
 const departmentOptions = computed(() => [...new Set(sortedData.value.map(d => d.department.name))].map(n => ({ label: n, value: n })))
 
-const pagination = {
-  pageSize: 10,
+const pagination = { pageSize: 10 }
+
+const handleAddEmployeeButton = () => {
+  drawer.setDrawerOpen('create', true)
+  form.resetFormModel('employee')
 }
 
-const editEmployee = (employee: EmployeeView) => alert('Not implemented')
+const handleEditEmployeeButton = (employee: EmployeeView) => {
+  const { user, address, department } = employee
+  drawer.setDrawerOpen('edit', true)
+  form.setFormModel('employee', {
+    user: {
+      ...user,
+      dob: new Date(user.dob).getTime(),
+      avatar_url: user.avatar_url ?? '',
+      avatar_image: '',
+    },
+    address,
+    department,
+    salary: parseFloat(employee.salary),
+    role: employee.role,
+    startAt: new Date(employee.start_at).getTime(),
+    endAt: employee.end_at ? new Date(employee.end_at).getTime() : null,
+  })
+}
 
 const deleteEmployee = (username: string) => {
   loadingBar.start()
   const { onFetchError, onFetchResponse } = useFetch<EmployeeView>(`${import.meta.env.VITE_SERVER_URL}/employee/${username}`).delete().json<EmployeeView>()
   onFetchError(() => {
     loadingBar.error()
-    notification.error({ title: 'An error occured', meta: `Unable to delete employee - ${username}` })
+    notification.error({ title: 'An error occurred', meta: `Unable to delete employee - ${username}` })
   })
   onFetchResponse(() => {
     loadingBar.finish()
@@ -80,88 +106,6 @@ const bulkDeleteEmployee = () => {
 
 const genderOptions = ['Male', 'Female'].map(g => ({ label: g, value: g.toLowerCase() }))
 const roleOptions = ['Admin', 'Manager', 'Runner', 'Cashier'].map(g => ({ label: g, value: g.toLowerCase() }))
-
-const editingFormModel = ref({
-  userValue: {
-    first_name: '',
-    last_name: '',
-    username: '',
-    email: '',
-    dob: null as number | null,
-    gender: '',
-    phone_number: '',
-    avatar_url: '',
-  },
-
-  departmentValue: {
-    name: '',
-  },
-
-  addressValue: {
-    city: '',
-    country: '',
-    line1: '',
-    line2: '',
-    postal_code: '',
-    state: '',
-  },
-
-  salaryValue: null as number | null,
-  roleValue: '',
-  startAtValue: null as number | null,
-  endAtValue: null as number | null,
-})
-
-watch(editing, () => {
-  if (editing.value.employee) {
-    const { user, address, department, ...employee } = editing.value.employee
-    editingFormModel.value = {
-      ...editingFormModel.value,
-      userValue: {
-        ...user,
-        dob: new Date(user.dob).getTime(),
-        avatar_url: user.avatar_url ?? '',
-      },
-      addressValue: address,
-      departmentValue: { name: department.name },
-      salaryValue: parseFloat(employee.salary),
-      roleValue: employee.role,
-      startAtValue: new Date(employee.start_at).getTime(),
-      endAtValue: employee.end_at ? new Date(employee.end_at).getTime() : null,
-    }
-  }
-})
-
-const addFormModel = ref({
-  userValue: {
-    first_name: '',
-    last_name: '',
-    username: '',
-    email: '',
-    dob: null as number | null,
-    gender: '',
-    phone_number: '',
-    avatar_url: '',
-  },
-
-  departmentValue: {
-    name: '',
-  },
-
-  addressValue: {
-    city: '',
-    country: '',
-    line1: '',
-    line2: '',
-    postal_code: '',
-    state: '',
-  },
-
-  salaryValue: null as number | null,
-  roleValue: '',
-  startAtValue: null as number | null,
-  endAtValue: null as number | null,
-})
 
 const columns: DataTableColumn<EmployeeView>[] = [
   {
@@ -225,6 +169,7 @@ const columns: DataTableColumn<EmployeeView>[] = [
         {
           default: () => [
             h(
+              // @ts-ignore
               NAvatar,
               {
                 round: true,
@@ -330,7 +275,7 @@ const columns: DataTableColumn<EmployeeView>[] = [
           default: () => [
             h(
               NButton,
-              { tertiary: true, circle: true, type: 'info', onClick: () => editing.value = { employee: row, isEditing: true } },
+              { tertiary: true, circle: true, type: 'info', onClick: () => handleEditEmployeeButton(row) },
               {
                 icon: () => h(
                   NIcon,
@@ -372,7 +317,7 @@ const columns: DataTableColumn<EmployeeView>[] = [
           </template>
           Bulk Delete
         </n-button>
-        <n-button icon-placement="right" @click="() => addFormOpen = true">
+        <n-button icon-placement="right" @click="handleAddEmployeeButton">
           <template #icon>
             <n-icon>
               <add />
@@ -392,231 +337,19 @@ const columns: DataTableColumn<EmployeeView>[] = [
       :pagination="pagination"
     />
   </n-space>
-  <n-drawer v-model:show="editing.isEditing" :width="450">
-    <n-drawer-content
-      :title="editing.employee ? `${editing.employee.user.first_name} ${editing.employee.user.last_name}` : ''"
-    >
-      <n-form ref="editingFormRef" size="small" :model="editingFormModel">
-        <n-grid :span="24" :x-gap="4">
-          <n-form-item-gi
-            :span="12"
-            label="First Name"
-            path="editingFormModel.userValue.first_name"
-          >
-            <n-input
-              v-model:value="editingFormModel.userValue.first_name"
-              placeholder="First Name"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Last Name" path="editingFormModel.userValue.last_name">
-            <n-input v-model:value="editingFormModel.userValue.last_name" placeholder="Last Name" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Username" path="editingFormModel.userValue.username">
-            <n-input
-              v-model:value="editingFormModel.userValue.username"
-              disabled
-              placeholder="Username"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Email" path="editingFormModel.userValue.email">
-            <n-input v-model:value="editingFormModel.userValue.email" placeholder="Email" />
-          </n-form-item-gi>
-          <n-form-item-gi
-            :span="12"
-            label="Phone Number"
-            path="editingFormModel.userValue.phone_number"
-          >
-            <n-input
-              v-model:value="editingFormModel.userValue.phone_number"
-              placeholder="Phone Number"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Date of Birth" path="editingFormModel.userValue.dob">
-            <n-date-picker v-model:value="editingFormModel.userValue.dob" type="date" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="24" label="Gender" path="editingFormModel.userValue.gender">
-            <n-select
-              v-model:value="editingFormModel.userValue.gender"
-              placeholder="Gender"
-              :options="genderOptions"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Start At" path="editingFormModel.startAtValue">
-            <n-date-picker v-model:value="editingFormModel.startAtValue" type="date" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="End At" path="editingFormModel.endAtValue">
-            <n-date-picker v-model:value="editingFormModel.endAtValue" type="date" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Role" path="editingFormModel.roleValue">
-            <n-select
-              v-model:value="editingFormModel.roleValue"
-              placeholder="Role"
-              :options="roleOptions"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Salary" path="editingFormModel.salaryValue">
-            <n-input-number v-model:value="editingFormModel.salaryValue">
-              <template #prefix>
-                RM
-              </template>
-            </n-input-number>
-          </n-form-item-gi>
-        </n-grid>
-      </n-form>
-      <template #footer>
-        <n-button
-          ghost
-          type="error"
-          class="mr-2"
-          @click="() => editing = { employee: null, isEditing: false }"
-        >
-          Cancel
-        </n-button>
-        <n-button type="success">
-          Apply
-        </n-button>
-      </template>
-    </n-drawer-content>
-  </n-drawer>
 
-  <n-drawer v-model:show="addFormOpen" :width="460">
-    <n-drawer-content>
-      <n-form ref="addFormRef" size="small" :model="addFormModel">
-        <n-grid :span="24" :x-gap="4">
-          <n-form-item-gi :span="24">
-            <n-h2 class="mb-0">User</n-h2>
-          </n-form-item-gi>
-          <n-form-item-gi
-            :span="12"
-            label="First Name"
-            path="addFormModel.userValue.first_name"
-          >
-            <n-input
-              v-model:value="addFormModel.userValue.first_name"
-              placeholder="First Name"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Last Name" path="addFormModel.userValue.last_name">
-            <n-input v-model:value="addFormModel.userValue.last_name" placeholder="Last Name" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Username" path="addFormModel.userValue.username">
-            <n-input
-              v-model:value="addFormModel.userValue.username"
-              disabled
-              placeholder="Username"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Email" path="addFormModel.userValue.email">
-            <n-input v-model:value="addFormModel.userValue.email" placeholder="Email" />
-          </n-form-item-gi>
-          <n-form-item-gi
-            :span="12"
-            label="Phone Number"
-            path="addFormModel.userValue.phone_number"
-          >
-            <n-input
-              v-model:value="addFormModel.userValue.phone_number"
-              placeholder="Phone Number"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Date of Birth" path="addFormModel.userValue.dob">
-            <n-date-picker v-model:value="addFormModel.userValue.dob" type="date" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="24" label="Gender" path="addFormModel.userValue.gender">
-            <n-select
-              v-model:value="addFormModel.userValue.gender"
-              placeholder="Gender"
-              :options="genderOptions"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="24">
-            <n-h2 class="mb-0">
-              Employee
-            </n-h2>
-          </n-form-item-gi>
-          <n-form-item-gi :span="24" label="Department" path="addFormModel.departmentValue.name">
-            <n-select
-              v-model:value="addFormModel.departmentValue.name"
-              placeholder="Department"
-              :options="departmentOptions"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Start At" path="addFormModel.startAtValue">
-            <n-date-picker v-model:value="addFormModel.startAtValue" type="date" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="End At" path="addFormModel.endAtValue">
-            <n-date-picker v-model:value="addFormModel.endAtValue" type="date" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Role" path="addFormModel.roleValue">
-            <n-select
-              v-model:value="addFormModel.roleValue"
-              placeholder="Role"
-              :options="roleOptions"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Salary" path="addFormModel.salaryValue">
-            <n-input-number v-model:value="addFormModel.salaryValue" placeholder="Salary">
-              <template #prefix>
-                RM
-              </template>
-            </n-input-number>
-          </n-form-item-gi>
-          <n-form-item-gi :span="24" :style="{ padding: 0 }">
-            <n-h2 class="mb-0">
-              Address
-            </n-h2>
-          </n-form-item-gi>
-          <n-form-item-gi :span="24" label="Address Line 1" path="addFormModel.addressValue.line1">
-            <n-input
-              v-model:value="addFormModel.addressValue.line1"
-              placeholder="Address Line 1"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="24" label="Address Line 2" path="addFormModel.addressValue.line2">
-            <n-input
-              v-model:value="addFormModel.addressValue.line2"
-              placeholder="Address Line 2"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="City" path="addFormModel.addressValue.city">
-            <n-input
-              v-model:value="addFormModel.addressValue.city"
-              placeholder="City"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="State" path="addFormModel.addressValue.state">
-            <n-input
-              v-model:value="addFormModel.addressValue.state"
-              placeholder="State"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Postal Code" path="addFormModel.addressValue.postal_code">
-            <n-input
-              v-model:value="addFormModel.addressValue.postal_code"
-              placeholder="Postal Code"
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="12" label="Country" path="addFormModel.addressValue.country">
-            <n-input
-              v-model:value="addFormModel.addressValue.country"
-              placeholder="Country"
-            />
-          </n-form-item-gi>
-        </n-grid>
-      </n-form>
-      <template #footer>
-        <n-button
-          ghost
-          type="error"
-          class="mr-2"
-          @click="() => addFormOpen = false"
-        >
-          Cancel
-        </n-button>
-        <n-button type="success">
-          Apply
-        </n-button>
-      </template>
-    </n-drawer-content>
-  </n-drawer>
+  <employee-drawer
+    type="create"
+    :refetch="() => execute()"
+    :department-options="departmentOptions"
+    :gender-options="genderOptions"
+    :role-options="roleOptions"
+  />
+  <employee-drawer
+    type="edit"
+    :refetch="() => execute()"
+    :department-options="departmentOptions"
+    :gender-options="genderOptions"
+    :role-options="roleOptions"
+  />
 </template>

@@ -15,6 +15,7 @@ declare module 'vue' {
     CarbonPedestrian: typeof import('~icons/carbon/pedestrian')['default']
     CarbonSun: typeof import('~icons/carbon/sun')['default']
     CarbonWarning: typeof import('~icons/carbon/warning')['default']
+    EmployeeDrawer: typeof import('./components/EmployeeDrawer.vue')['default']
     Footer: typeof import('./components/Footer.vue')['default']
     Navbar: typeof import('./components/Navbar.vue')['default']
     Provider: typeof import('./components/Provider.vue')['default']

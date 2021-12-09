@@ -30,13 +30,12 @@ NUM_EMPLOYEES = 50
 
 FAKE_USER_CSV = "./fake_user.csv"
 
-
 # generate fake users
 fake_users = [{
     "email": fake.email(),
     "username": fake.simple_profile()['username'],
     "password_hash": fake.password(),
-    "phone_number": fake.phone_number(),
+    "phone_number": f"+601{fake.random_int(min=0, max=9)}-{fake.random_number(digits=7)}",
     "first_name": fake.first_name(),
     "last_name": fake.last_name(),
     "dob": fake.date_of_birth(maximum_age=50),

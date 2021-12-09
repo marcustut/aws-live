@@ -12,15 +12,15 @@ from schema import create_employee_schema, update_employee_schema
 
 bundleExist = path.isfile('./web/dist/index.html')
 
+# initialize the config (setup environment var)
+config = Config()
+
 # setup flask
 app = Flask(__name__)
-cors = CORS(app)
+cors = CORS(app, origins=["http://localhost:3333"] if config.app_env != "production" else None)
 
 # register blueprints
 app.register_blueprint(error_blueprint)
-
-# initialize the config (setup environment var)
-config = Config()
 
 # connect to rds (mysql)
 db_conn = pymysql.connect(
@@ -51,67 +51,18 @@ def employee(username: str):
     elif request.method == "DELETE":
         return handle_delete_one_employee(db_conn, username)
     else:
-        return handle_update_one_employee(db_conn, username, request.json)
+        return handle_update_one_employee(db_conn, username, request.json, config.s3_bucket_id)
 
 
 @app.route("/employee", methods=['POST'])
 @expects_json(create_employee_schema)
 def create_employee():
-    return handle_create_one_employee(db_conn, request.json)
+    return handle_create_one_employee(db_conn, request.json, config.s3_bucket_id)
 
 
 @app.route("/employees", methods=['GET'])
 def employees():
     return handle_fetch_many_employee(db_conn, request.args)
-
-# @app.route("/addemp", methods=['POST'])
-# def AddEmp():
-#     emp_id = request.form['emp_id']
-#     first_name = request.form['first_name']
-#     last_name = request.form['last_name']
-#     pri_skill = request.form['pri_skill']
-#     location = request.form['location']
-#     emp_image_file = request.files['emp_image_file']
-
-#     insert_sql = "INSERT INTO employee VALUES (%s, %s, %s, %s, %s)"
-#     cursor = db_conn.cursor()
-
-#     if emp_image_file.filename == "":
-#         return "Please select a file"
-
-#     try:
-
-#         cursor.execute(insert_sql, (emp_id, first_name, last_name, pri_skill, location))
-#         db_conn.commit()
-#         emp_name = "" + first_name + " " + last_name
-#         # Uplaod image file in S3 #
-#         emp_image_file_name_in_s3 = "emp-id-" + str(emp_id) + "_image_file"
-#         s3 = boto3.resource('s3')
-
-#         try:
-#             print("Data inserted in MySQL RDS... uploading image to S3...")
-#             s3.Bucket(custombucket).put_object(Key=emp_image_file_name_in_s3, Body=emp_image_file)
-#             bucket_location = boto3.client('s3').get_bucket_location(Bucket=custombucket)
-#             s3_location = (bucket_location['LocationConstraint'])
-
-#             if s3_location is None:
-#                 s3_location = ''
-#             else:
-#                 s3_location = '-' + s3_location
-
-#             object_url = "https://s3{0}.amazonaws.com/{1}/{2}".format(
-#                 s3_location,
-#                 custombucket,
-#                 emp_image_file_name_in_s3)
-
-#         except Exception as e:
-#             return str(e)
-
-#     finally:
-#         cursor.close()
-
-#     print("all modification done...")
-#     return render_template('AddEmpOutput.html', name=emp_name)
 
 
 if __name__ == '__main__':

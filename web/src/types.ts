@@ -2,6 +2,8 @@ import { ViteSSGContext } from 'vite-ssg'
 
 export type UserModule = (ctx: ViteSSGContext) => void
 
+export type SelectOption = { label: string; value: string }
+
 export type Address = {
   address_id: number
   city: string
@@ -37,7 +39,7 @@ export type User = {
 export type EmployeeView = {
   employee_id: number
   role: string
-  salary: string // TODO: check why is it string
+  salary: string
   user: User
   address: Address
   department: Department
