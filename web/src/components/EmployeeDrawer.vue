@@ -107,6 +107,8 @@ const mapToCreateEmployeeRequest = ({ user, department, address, ...employee }: 
   return {
     email: user.email,
     username: user.username,
+    // @ts-ignore
+    password_hash: 'randomPassword',
     password: 'randomPassword',
     phone_number: user.phone_number,
     first_name: user.first_name,

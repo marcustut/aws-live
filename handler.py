@@ -61,11 +61,12 @@ def handle_create_one_employee(db_conn: Connection, body: Optional[Any], s3_buck
     cursor: DictCursor = db_conn.cursor()
 
     # hash the password
-    body['password_hash'] = hash_password(body['password'])
-    del body['password']
+    if 'password_hash' in body:
+        body['password_hash'] = hash_password(body['password'])
+        del body['password']
 
     # upload image to s3 if not None
-    if body['avatar_image'] is not None:
+    if 'avatar_image' in body and body['avatar_image'] is not None:
         mime = body['avatar_image'].split(',')[0]
         data = body['avatar_image'].split(',')[1]
         file_extension = ''
@@ -148,9 +149,11 @@ def handle_create_one_employee(db_conn: Connection, body: Optional[Any], s3_buck
             raise Exception(
                 f"Failed to fetch the created employee with username {body['username']}")
     except NotFound as e:
+        print(e)
         db_conn.rollback()
         raise e
     except Exception as e:
+        print(e)
         db_conn.rollback()
         raise InternalServerError(str(e))
     finally:
@@ -170,7 +173,7 @@ def handle_update_one_employee(db_conn: Connection, username: str, body: dict, s
     cursor: DictCursor = db_conn.cursor()
 
     # upload image to s3 if not None
-    if body['avatar_image'] is not None:
+    if 'avatar_image' in body and body['avatar_image'] is not None:
         mime = body['avatar_image'].split(',')[0]
         data = body['avatar_image'].split(',')[1]
         file_extension = ''

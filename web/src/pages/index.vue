@@ -84,9 +84,9 @@ const handleEditEmployeeButton = (employee: EmployeeView) => {
   })
 }
 
-const deleteEmployee = (username: string) => {
+const deleteEmployee = async(username: string) => {
   loadingBar.start()
-  const { onFetchError, onFetchResponse } = useFetch<EmployeeView>(`${import.meta.env.VITE_SERVER_URL}/employee/${username}`).delete().json<EmployeeView>()
+  const { onFetchError, onFetchResponse, execute } = useFetch<EmployeeView>(`${import.meta.env.VITE_SERVER_URL}/employee/${username}`, { immediate: false }).delete().json<EmployeeView>()
   onFetchError(() => {
     loadingBar.error()
     notification.error({ title: 'An error occurred', meta: `Unable to delete employee - ${username}` })
@@ -95,11 +95,12 @@ const deleteEmployee = (username: string) => {
     loadingBar.finish()
     notification.success({ title: 'Successfully deleted', meta: `Employee - ${username} had been deleted` })
   })
+  await execute()
 }
 
 const bulkDeleteEmployee = () => {
   if (checkedData.value.length !== 0)
-    checkedData.value.forEach(d => deleteEmployee(d.user.username))
+    checkedData.value.forEach(async d => await deleteEmployee(d.user.username))
   else
     notification.error({ title: 'No rows are selected', meta: 'Select at least one row to bulk delete' })
 }
@@ -309,7 +310,7 @@ const columns: DataTableColumn<EmployeeView>[] = [
       <p>You have selected {{ checkedRowKeys.length }} row.</p>
 
       <n-space>
-        <n-button ghost type="error" icon-placement="right" @click="bulkDeleteEmployee">
+        <n-button disabled ghost type="error" icon-placement="right" @click="bulkDeleteEmployee">
           <template #icon>
             <n-icon>
               <delete />
