@@ -2,7 +2,7 @@
 
 # install dev tools for build
 sudo yum groupinstall "Development Tools" -y
-sudo yum install openssl-devel -y
+sudo yum install openssl-devel libffi-devel -y
 
 # install pyenv
 curl https://pyenv.run | bash
